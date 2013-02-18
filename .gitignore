@@ -36,3 +36,8 @@ src
 # Ignore generated config files
 etc/*.nginx.conf
 etc/*.logrotate
+
+# buildout.cfg will be a symlink to development.cfg,
+# development-server.cfg, staging-server.cfg, or
+# production-server.cfg.
+buildout.cfg
