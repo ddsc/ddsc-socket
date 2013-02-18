@@ -9,25 +9,26 @@ long_description = '\n\n'.join([
     ])
 
 install_requires = [
+    'celery',
     'setuptools',
     ],
 
 tests_require = [
-    'nose',
     'coverage',
+    'nose',
     ]
 
 setup(name='ddsc-socket',
       version=version,
-      description="TODO",
+      description="Socket server that handles incoming sensor data",
       long_description=long_description,
       # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[],
       keywords=[],
-      author='TODO',
-      author_email='TODO@nelen-schuurmans.nl',
+      author='Shaoqing Lu',
+      author_email='S.Lu@fugro.nl',
       url='',
-      license='GPL',
+      license='MIT',
       packages=['ddsc_socket'],
       include_package_data=True,
       zip_safe=False,
