@@ -12,9 +12,6 @@ Post-nensskel setup TODO
 Here are some instructions on what to do after you've created the project with
 nensskel.
 
-- Check https://github.com/nens/ddsc-socket/settings/collaboration if the team
-  "Nelen & Schuurmans" has access.
-
 - Add a new jenkins job at
   http://buildbot.lizardsystem.nl/jenkins/view/djangoapps/newJob or
   http://buildbot.lizardsystem.nl/jenkins/view/libraries/newJob . Job name
