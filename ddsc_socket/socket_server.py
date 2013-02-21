@@ -19,30 +19,33 @@ from ddsc_socket import localsettings
 
 SOCKS_SETTINGS = localsettings.SOCKS
 
+
 class ConnectPostgresDB():
     cur = None
     conn = None
+
     def connect(self):
         try:
-            self.conn = psycopg2.connect(dbname=SOCKS_SETTINGS['db_name'],\
-                user=SOCKS_SETTINGS['db_user'],\
-                password=SOCKS_SETTINGS['db_password'],\
+            self.conn = psycopg2.connect(dbname=SOCKS_SETTINGS['db_name'],
+                user=SOCKS_SETTINGS['db_user'],
+                password=SOCKS_SETTINGS['db_password'],
                 host=SOCKS_SETTINGS['db_ip'])
             self.cur = self.conn.cursor()
         except:
             logger.error('database connection failed!')
 
+
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
-        
-        cdb.cur.execute("SELECT COUNT(*) FROM ddsc_core_ipaddress " +\
+
+        cdb.cur.execute("SELECT COUNT(*) FROM ddsc_core_ipaddress " +
             " WHERE label = " + '\'' + self.client_address[0] + '\'')
-        
+
         if cdb.cur.fetchone()[0] < 1:
-            logger.error('client IP: %r is not valid!'\
+            logger.error('client IP: %r is not valid!'
                 % self.client_address[0])
             return
-        
+
         logger.info("connection established with:  %r on port %r" %
                     (self.client_address[0], self.client_address[1]))
         first_time = time.time()
@@ -69,9 +72,14 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                         self.client_address[0],
                         str(self.client_address[1])))
                     keepLooping = False
-            f.close()    
-            celery.send_task("ddsc_worker.importer.new_socket_detected", \
-                kwargs={'pathDir': path, 'fileName': fileName + str(i) + '.csv'})
+            f.close()
+            celery.send_task(
+                "ddsc_worker.importer.new_socket_detected",
+                kwargs={
+                    'pathDir': path,
+                    'fileName': fileName + str(i) + '.csv'
+                }
+            )
 
             i += 1
             first_time = time.time()
