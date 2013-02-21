@@ -9,7 +9,7 @@ Based on Python official document
 **** need to be set in django settings
 '''
 import SocketServer
-import logging
+import logging.config
 import threading
 import time
 
@@ -114,16 +114,14 @@ class App():
                 server.shutdown()
                 break
 
+logging.config.dictConfig(settings.LOGGING)
+logger = logging.getLogger("ddsc_socket.socket_server")
+
+logger.info(
+    "Starting socket server on port {0}".format(SOCKS_SETTINGS['port'])
+)
 app = App()
 cdb = ConnectPostgresDB()
-logger = logging.getLogger("DaemonLog")
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler = logging.FileHandler(SOCKS_SETTINGS['socks_logging'])
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
 cdb.connect()
 app.run()
 
