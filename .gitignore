@@ -38,6 +38,9 @@ etc/*.nginx.conf
 etc/*.logrotate
 
 # buildout.cfg will be a symlink to development.cfg,
-# development-server.cfg, staging-server.cfg, or
-# production-server.cfg.
+# staging.cfg, or production.cfg.
 buildout.cfg
+
+# Local config files
+ddsc_socket/celeryconfig.py
+ddsc_socket/localsettings.py
