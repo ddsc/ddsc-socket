@@ -8,16 +8,17 @@ Based on Python official document
 **** socket host ip address and port
 **** need to be set in django settings
 '''
-import threading
 import SocketServer
-import time
-from ddsc_socket.celery import celery
 import logging
+import threading
+import time
+
 import psycopg2
 
-from ddsc_socket import localsettings
+from ddsc_socket import settings
+from ddsc_socket.celery import celery
 
-SOCKS_SETTINGS = localsettings.SOCKS
+SOCKS_SETTINGS = settings.SOCKS
 
 
 class ConnectPostgresDB():
