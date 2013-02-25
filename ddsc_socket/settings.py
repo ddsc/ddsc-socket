@@ -1,7 +1,12 @@
+from __future__ import absolute_import
+
 import os
+
+from ddsc_socket.celery import celery
 
 SETTINGS_DIR = os.path.dirname(os.path.realpath(__file__))
 BUILDOUT_DIR = os.path.abspath(os.path.join(SETTINGS_DIR, '..'))
+BROKER_URL = celery.conf['BROKER_URL']
 
 SOCKS = {
     'host': '10.10.101.118',  # socket server host
@@ -36,11 +41,16 @@ LOGGING = {
         'null': {
             'class': 'logging.NullHandler',
         },
+        'rmq': {
+            'class': 'ddsc_logging.handlers.DDSCHandler',
+            'level': 'INFO',
+            'broker_url': BROKER_URL,
+        },
     },
     'loggers': {
         '': {
             'handlers': ['file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
     }
 }

@@ -10,6 +10,7 @@ long_description = '\n\n'.join([
 
 install_requires = [
     'celery',
+    'ddsc-logging',
     'psycopg2',
     'setuptools',
     ],
