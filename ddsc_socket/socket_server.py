@@ -21,32 +21,28 @@ from ddsc_socket.celery import celery
 SOCKS_SETTINGS = settings.SOCKS
 
 
-class ConnectPostgresDB():
-    cur = None
-    conn = None
-
-    def connect(self):
+class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
+    def handle(self):
         try:
-            self.conn = psycopg2.connect(dbname=SOCKS_SETTINGS['db_name'],
+            conn = psycopg2.connect(dbname=SOCKS_SETTINGS['db_name'],
                 user=SOCKS_SETTINGS['db_user'],
                 password=SOCKS_SETTINGS['db_password'],
                 host=SOCKS_SETTINGS['db_ip'])
-            self.cur = self.conn.cursor()
+            cur = conn.cursor()
         except:
             logger.error('database connection failed!')
-
-
-class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
-    def handle(self):
-
-        cdb.cur.execute("SELECT COUNT(*) FROM ddsc_core_ipaddress " +
+        
+        cur.execute("SELECT COUNT(*) FROM ddsc_core_ipaddress " +
             " WHERE label = " + '\'' + self.client_address[0] + '\'')
 
-        if cdb.cur.fetchone()[0] < 1:
+        if cur.fetchone()[0] < 1:
             logger.error('client IP: %r is not valid!'
                 % self.client_address[0])
             return
-
+        
+        conn.close()
+        cur.close()  # close database
+        
         logger.info("connection established with:  %r on port %r" %
                     (self.client_address[0], self.client_address[1]))
         first_time = time.time()
@@ -121,8 +117,5 @@ logger.info(
     "Starting socket server on port {0}".format(SOCKS_SETTINGS['port'])
 )
 app = App()
-cdb = ConnectPostgresDB()
-cdb.connect()
 app.run()
-
 logger.warning("Threaded DDSC Socket Server is closed")
