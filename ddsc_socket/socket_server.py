@@ -75,7 +75,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                     keepLooping = False
             f.close()
             celery.send_task(
-                "ddsc_worker.importer.new_socket_detected",
+                "ddsc_worker.tasks.new_socket_detected",
                 kwargs={
                     'pathDir': path,
                     'fileName': fileName + str(i) + '.csv'
