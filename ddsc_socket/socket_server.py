@@ -1,13 +1,4 @@
-'''
-Created on 14 nov. 2012
-@author: LuS
-Based on Python official document
-20.17.4.3. Asynchronous Mixins
-**** socket csv destination path
-**** socket logging file path
-**** socket host ip address and port
-**** need to be set in django settings
-'''
+# (c) Fugro GeoServices. MIT licensed, see LICENSE.rst.
 import SocketServer
 import logging.config
 import threading
