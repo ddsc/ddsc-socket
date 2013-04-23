@@ -1,3 +1,4 @@
+# (c) N&S. MIT licensed, see LICENSE.rst.
 from __future__ import absolute_import
 
 import os
