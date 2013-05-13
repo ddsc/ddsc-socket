@@ -3,6 +3,7 @@ import SocketServer
 import logging.config
 import threading
 import time
+from datetime import datetime
 
 import psycopg2
 
@@ -45,7 +46,8 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         i = 1
         keepLooping = True
         while keepLooping:
-            f = open(path + fileName + str(i) + '.csv', 'wb')
+            time_string = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+            f = open(path + fileName + time_string + '.csv', 'wb')
             while timeout > (current_time - first_time) and keepLooping:
                 try:
                     self.request.send("ok")
