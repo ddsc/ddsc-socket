@@ -67,7 +67,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                 "ddsc_worker.tasks.new_socket_detected",
                 kwargs={
                     'pathDir': path,
-                    'fileName': fileName + str(i) + '.csv'
+                    'fileName': fileName + time_string + '.csv'
                 }
             )
 
