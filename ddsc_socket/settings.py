@@ -1,4 +1,4 @@
-# (c) Nelen & Schuurmans.  MIT licensed, see LICENSE.rst.
+# (c) Fugro GeoServices, Nelen & Schuurmans.  MIT licensed, see LICENSE.rst.
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
@@ -8,16 +8,21 @@ from __future__ import unicode_literals
 
 import os
 
-from ddsc_socket.celery import celery
-
 SETTINGS_DIR = os.path.dirname(os.path.realpath(__file__))
 BUILDOUT_DIR = os.path.abspath(os.path.join(SETTINGS_DIR, '..'))
-BROKER_URL = celery.conf['BROKER_URL']
 
+# Socket server settings (override in localsettings.py):
 HOST = ''  # An empty string means: listen on all available network interfaces.
 PORT = 0  # Port 0 means: let the server choose an arbitrary unused port.
-DIR = os.path.join(BUILDOUT_DIR, 'var', 'csv')
+DIR = os.path.join(BUILDOUT_DIR, 'var', 'csv')  # Result dir.
 
+
+# Celery settings (override in localsettings.py):
+# redis://:password@hostname:port/db_number
+class CeleryConfig:
+    BROKER_URL = 'redis://localhost:6379/0'
+
+# Database settings (override in localsettings.py):
 # See: http://initd.org/psycopg/docs/module.html.
 # Override these values in localsettings.py:
 DATABASE = {
@@ -27,6 +32,7 @@ DATABASE = {
     'password': 'vagrant',
 }
 
+# Logging settings (override in localsettings.py):
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

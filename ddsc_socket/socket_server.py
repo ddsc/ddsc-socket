@@ -1,4 +1,5 @@
-# (c) Fugro GeoServices. MIT licensed, see LICENSE.rst.
+# (c) Fugro GeoServices, Nelen & Schuurmans. MIT licensed, see LICENSE.rst.
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
 from __future__ import division
@@ -14,12 +15,12 @@ import psycopg2
 import pytz
 
 from ddsc_socket import settings
-#from ddsc_socket.celery import celery
+from ddsc_socket.celery import celery
 
 logger = logging.getLogger(__name__)
 
 BUFSIZE = 1024  # bytes
-SQL = "SELECT count(1) FROM ddsc_core_ipaddress WHERE label = '{}';"
+SQL = "SELECT count(1) FROM lizard_nxt_ipmapping WHERE ip_address = '{}';"
 
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
@@ -57,32 +58,27 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
         utc = datetime.now(pytz.utc).isoformat()
         filename = "{}_{}.csv".format(ip, utc)
-        filename = os.path.join(settings.DIR, filename)
+        file_path = os.path.join(settings.DIR, filename)
 
         # TODO: implement a timeout.
         # TODO: implement a rolling file.
 
         with open(filename, 'wb') as f:
-            logger.info("WRITING DATA")
             f.write(data)
             while True:
                 self.request.send("ok")
                 data = self.request.recv(BUFSIZE)  # BLOCKING
                 if data:
-                    logger.info("WRITING DATA")
-                    logger.info(data)
                     f.write(data)
                 else:
                     logger.info("Connection with %s lost.", ip)
                     break
 
-#           celery.send_task(
-#               "ddsc_worker.tasks.new_socket_detected",
-#               kwargs={
-#                   'pathDir': path,
-#                   'fileName': fileName + time_string + '.csv'
-#               }
-#           )
+        logger.info("New file to be imported: %s.", file_path)
+
+        celery.send_task(
+            "lizard_nxt.tasks.import_socket_timeseries_from_csv",
+            kwargs={'file_path': file_path})
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):

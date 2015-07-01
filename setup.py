@@ -41,6 +41,6 @@ setup(
     extras_require={'test': tests_require},
     entry_points={
         'console_scripts': [
-            'serve = ddsc_socket.socket_server:main',
+            'socket-server = ddsc_socket.socket_server:main',
         ]},
     )

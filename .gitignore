@@ -42,5 +42,7 @@ etc/*.logrotate
 buildout.cfg
 
 # Local config files
-ddsc_socket/celeryconfig.py
 ddsc_socket/localsettings.py
+
+# Vim
+*.swp
