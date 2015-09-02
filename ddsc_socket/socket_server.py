@@ -10,6 +10,7 @@ from datetime import datetime
 import SocketServer
 import logging.config
 import os
+import socket
 
 import psycopg2
 import pytz
@@ -67,12 +68,17 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
             f.write(data)
             while True:
                 self.request.send("ok")
-                data = self.request.recv(BUFSIZE)  # BLOCKING
-                if data:
-                    f.write(data)
-                else:
+                try:
+                    data = self.request.recv(BUFSIZE)  # BLOCKING
+                except socket.error:
+                    # What is currently lacking, is some kind of "EOF" command
+                    # the client can send to signal end-of-file.
                     logger.info("Connection with %s lost.", ip)
                     break
+                except Exception as e:
+                    logger.exception(e)
+                else:
+                    f.write(data)
 
         logger.info("New file to be imported: %s.", file_path)
 

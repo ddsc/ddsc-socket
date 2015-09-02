@@ -13,6 +13,7 @@ install_requires = [
     'psycopg2',
     'python-logstash',
     'pytz',
+    'redis',
     'setuptools',
     ],
 
