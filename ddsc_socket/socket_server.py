@@ -63,7 +63,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         # TODO: implement a timeout.
         # TODO: implement a rolling file.
 
-        with open(filename, 'wb') as f:
+        with open(file_path, 'wb') as f:
             f.write(data)
             while True:
                 self.request.send("ok")
