@@ -84,7 +84,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
         celery.send_task(
             "lizard_nxt.tasks.import_socket_timeseries_from_csv",
-            kwargs={'file_path': file_path})
+            args=[file_path])
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
