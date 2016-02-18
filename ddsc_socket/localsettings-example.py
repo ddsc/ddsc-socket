@@ -11,7 +11,9 @@ from .settings import DATABASE
 from .settings import LOGGING
 
 # Socket server
+HOST = ''
 PORT = 5008
+DIR = '/your/result/dir'
 
 # Celery
 CeleryConfig.BROKER_URL = (
