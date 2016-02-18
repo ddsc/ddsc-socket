@@ -92,6 +92,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         # TODO: implement a rolling file.
 
         with open(file_path, 'wb') as f:
+            logger.info("Writing data to %s", file_path)
             f.write(data)
             while True:
                 data = self._get_data()
@@ -100,9 +101,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                 else:
                     break
 
-        celery.send_task(
-            "lizard_nxt.tasks.import_socket_timeseries_from_csv",
-            args=[file_path])
+        TASK = "lizard_nxt.tasks.import_socket_timeseries_from_csv"
+        logger.info("Sending task to Celery: %s", TASK)
+        celery.send_task(TASK, args=[file_path])
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
