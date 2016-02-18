@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import SocketServer
+import errno
 import logging.config
 import os
 import socket
@@ -23,19 +24,48 @@ logger = logging.getLogger(__name__)
 BUFSIZE = 1024  # bytes
 SQL = "SELECT count(1) FROM lizard_nxt_ipmapping WHERE ip_address = '{}';"
 
+CONNEW = "Client connecting from %s:%d."
+CONEND = "Connection with %s:%d lost."
+UNAUTH = "Will not serve %s:%d (unauthorized)."
+
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
+    def _get_data(self):
+        """Return the data send by a client.
+
+        What is currently lacking, is some kind of "EOF" command the client
+        can send to signal end-of-file.
+
+        NB: a connection closed by a client does not always result in a
+        socket.error. In that case, data is an empty string.
+
+        """
+        try:
+            self.request.send("ok")
+            data = self.request.recv(BUFSIZE)  # BLOCKING
+        except socket.error as e:
+            if e.errno == errno.ECONNRESET:
+                logger.info(CONEND, self.ip, self.port)
+            else:
+                logger.error(e)
+            data = ''
+        else:
+            if not data:
+                logger.info(CONEND, self.ip, self.port)
+        finally:
+            return data
+
     def handle(self):
 
-        ip, port = self.client_address
-        logger.info("Client connecting from %s:%d.", ip, port)
+        self.ip, self.port = self.client_address
+        logger.info(CONNEW, self.ip, self.port)
 
         try:
             conn, cur = None, None
             conn = psycopg2.connect(**settings.DATABASE)
             cur = conn.cursor()
-            cur.execute(SQL.format(ip))
+            cur.execute(SQL.format(self.ip))
             count = cur.fetchone()[0]
         except Exception as e:
             logger.error(e)
@@ -47,18 +77,15 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                 conn.close()
 
         if count < 1:
-            logger.warning("Will not serve %s (unauthorized).", ip)
+            logger.warning(UNAUTH, self.ip, self.port)
             return
 
-        self.request.send("ok")
-        data = self.request.recv(BUFSIZE)  # BLOCKING
-
+        data = self._get_data()
         if not data:
-            logger.info("Connection with %s lost.", ip)
             return
 
         utc = datetime.now(pytz.utc).isoformat()
-        filename = "{}_{}.csv".format(ip, utc)
+        filename = "{}_{}.csv".format(self.ip, utc)
         file_path = os.path.join(settings.DIR, filename)
 
         # TODO: implement a timeout.
@@ -67,20 +94,11 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         with open(file_path, 'wb') as f:
             f.write(data)
             while True:
-                self.request.send("ok")
-                try:
-                    data = self.request.recv(BUFSIZE)  # BLOCKING
-                except socket.error:
-                    # What is currently lacking, is some kind of "EOF" command
-                    # the client can send to signal end-of-file.
-                    logger.info("Connection with %s lost.", ip)
-                    break
-                except Exception as e:
-                    logger.exception(e)
-                else:
+                data = self._get_data()
+                if data:
                     f.write(data)
-
-        logger.info("New file to be imported: %s.", file_path)
+                else:
+                    break
 
         celery.send_task(
             "lizard_nxt.tasks.import_socket_timeseries_from_csv",
