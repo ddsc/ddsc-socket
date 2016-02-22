@@ -11,7 +11,9 @@ import SocketServer
 import errno
 import logging.config
 import os
+import shutil
 import socket
+import tempfile
 
 import psycopg2
 import pytz
@@ -27,6 +29,10 @@ SQL = "SELECT count(1) FROM lizard_nxt_ipmapping WHERE ip_address = '{}';"
 CONNEW = "Client connecting from %s:%d."
 CONEND = "Connection with %s:%d lost."
 UNAUTH = "Will not serve %s:%d (unauthorized)."
+
+# Isilon storage does not support colons in filenames.
+# For that reason, ISO 8601's basic format is used.
+ISO8601 = '%Y%m%dT%H%M%S.%fZ'
 
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
@@ -84,15 +90,19 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         if not data:
             return
 
-        utc = datetime.now(pytz.utc).isoformat()
+        # Firstly, data is written to a temporary file. Only when all data is
+        # received, it is copied to shared storage, which is accessible by a
+        # task server.
+
+        utc = datetime.now(pytz.utc).strftime(ISO8601)
         filename = "{}_{}.csv".format(self.ip, utc)
-        file_path = os.path.join(settings.DIR, filename)
+        dst = os.path.join(settings.DIR, filename)
 
         # TODO: implement a timeout.
         # TODO: implement a rolling file.
 
-        with open(file_path, 'wb') as f:
-            logger.info("Writing data to %s", file_path)
+        with tempfile.NamedTemporaryFile() as f:
+            logger.debug("Writing data to %s", f.name)
             f.write(data)
             while True:
                 data = self._get_data()
@@ -100,10 +110,13 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                     f.write(data)
                 else:
                     break
+            f.flush()
+            logger.info("Copying data to %s", dst)
+            shutil.copyfile(f.name, dst)
 
         TASK = "lizard_nxt.tasks.import_socket_timeseries_from_csv"
         logger.info("Sending task to Celery: %s", TASK)
-        celery.send_task(TASK, args=[file_path])
+        celery.send_task(TASK, args=[dst])
 
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
